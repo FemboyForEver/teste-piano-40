@@ -11,8 +11,9 @@ local vim = game:GetService("VirtualInputManager")
 
 local nstr = string.gsub(str,"[[\]\n]","")
 
--- Utilisation d'un délai ajusté pour donner une sensation plus fluide, inspirée de la musique classique
 local delay = shared.tempo and (FinishTime / (string.len(nstr) / shared.tempo)) or shared.delay or FinishTime / (string.len(nstr) / 1.05)
+
+print("Finishing in", math.floor((delay * #nstr) / 60), "minute/s", tostring(tonumber(tostring((delay * #nstr) / 60):sub(3,8)) * 60):sub(1,2), "second/s")
 
 local shifting = false
 
@@ -34,11 +35,9 @@ local rem = true
 local insideBrackets = false
 local pressedKeys = {}
 
--- Fonction pour introduire des variations dans les délais, créant une sensation de phrasé musical
 local function musicalDelay(baseDelay)
-    local variation = math.random() * 0.05  -- Variation subtile entre 0 et 5%
-    local dynamicChange = math.random() * 0.1 - 0.05  -- Ajout d'une variation pour rendre certaines notes plus rapides ou lentes
-    return baseDelay + variation + dynamicChange
+    local variation = math.random() * 0.02
+    return baseDelay + variation
 end
 
 for i=1, #str do
@@ -66,7 +65,7 @@ for i=1, #str do
                     vim:SendKeyEvent(true, string.byte(cc:lower()), false, nil)
                 end
             end)
-            wait(0)  -- Jouer les notes simultanément
+            wait(musicalDelay(delay))
             pcall(function()
                 for _, cc in ipairs(pressedKeys) do
                     vim:SendKeyEvent(false, string.byte(cc:lower()), false, nil)
@@ -80,10 +79,10 @@ for i=1, #str do
         continue
     elseif c == " " or string.byte(c) == 10 then
         if shared.nospacedelay then continue end
-        wait(musicalDelay(delay))  -- Appliquer le délai musical entre les espaces
+        wait(musicalDelay(delay))
         continue
     elseif c == "|" or c == "-" then
-        wait(musicalDelay(delay * 2))  -- Pause un peu plus longue avec un délai dynamique
+        wait(musicalDelay(delay * 1.5))
         continue
     end
 
@@ -95,10 +94,10 @@ for i=1, #str do
     pcall(function()
         doshift(c)
         vim:SendKeyEvent(true, string.byte(c:lower()), false, nil)
-        wait()
+        wait(musicalDelay(delay))
         vim:SendKeyEvent(false, string.byte(c:lower()), false, nil)
         endshift()
     end)
 
-    wait(musicalDelay(delay))  -- Appliquer le délai musical entre les touches
+    wait(musicalDelay(delay))
 end
