@@ -1,0 +1,177 @@
+local Input = {}
+
+local keypress = getfenv(0).keypress -- Assurez-vous que ces fonctions sont définies dans votre environnement
+local keyrelease = getfenv(0).keyrelease
+
+local VK_LSHIFT = 0x10 -- Code de la touche Shift
+
+local NOTE_MAP = "1!2@34$5%6^78*9(0qQwWeErtTyYuiIoOpPasSdDfgGhHjJklLzZxcCvVbBnm"
+local UPPER_MAP = "!@ $%^ *( QWE TY IOP SD GHJ LZ CVB"
+local LOWER_MAP = "1234567890qwertyuiopasdfghjklzxcvbnm"
+
+local Thread = require(script.Parent.Util.Thread)
+local Maid = require(script.Parent.Util.Maid)
+
+local inputMaid = Maid.new()
+
+local function GetKey(pitch)
+    local idx = (pitch + 1 - 36) -- Ajuste la correspondance des touches selon le pitch
+    if (idx > #NOTE_MAP or idx < 1) then
+        return
+    else
+        local key = NOTE_MAP:sub(idx, idx)
+        return key, UPPER_MAP:find(key, 1, true)
+    end
+end
+
+function Input.IsUpper(pitch)
+    local key, upperMapIdx = GetKey(pitch)
+    if (not key) then return end
+    return upperMapIdx
+end
+
+function Input.Press(pitch)
+    local key, upperMapIdx = GetKey(pitch)
+    if (not key) then return end
+    if (upperMapIdx) then
+        local keyToPress = LOWER_MAP:sub(upperMapIdx, upperMapIdx)
+        keypress(VK_LSHIFT)
+        keypress(keyToPress:upper():byte())
+        keyrelease(VK_LSHIFT)
+    else
+        keypress(key:upper():byte()) 
+    end
+end
+
+function Input.Release(pitch)
+    local key, upperMapIdx = GetKey(pitch)
+    if (not key) then return end
+    if (upperMapIdx) then
+        local keyToPress = LOWER_MAP:sub(upperMapIdx, upperMapIdx)
+        keyrelease(keyToPress:upper():byte())
+    else
+        keyrelease(key:upper():byte())
+    end
+end
+
+function Input.Hold(pitch, duration)
+    if (inputMaid[pitch]) then
+        inputMaid[pitch] = nil
+    end
+    Input.Release(pitch)e
+    Input.Press(pitch)
+    inputMaid[pitch] = Thread.Delay(duration, Input.Release, pitch)
+end
+
+
+shared.stop = true
+wait(1)
+shared.stop = false
+
+shared.nospacedelay = shared.nospacedelay or false
+
+local str = shared.scr or "qw[er]ty"
+local FinishTime = shared.ftime or 10
+
+local vim = game:GetService("VirtualInputManager")
+
+local nstr = string.gsub(str,"[[\]\n]","")
+
+local delay = shared.tempo and (6 / shared.tempo) or shared.delay or FinishTime / (string.len(nstr) / 1.05)
+
+print("Finishing in", math.floor((delay * #nstr) / 60), "minute/s", tostring(tonumber(tostring((delay * #nstr) / 60):sub(3, 8)) * 60):sub(1, 2), "second/s")
+
+local shifting = false
+
+-- Fonction pour gérer la touche Shift (majuscule)
+local function doshift(key)
+    if key:upper() ~= key then return end
+    if tonumber(key) then return end
+    
+    vim:SendKeyEvent(true, 304, false, nil)
+    shifting = true
+end
+
+-- Fonction pour arrêter Shift
+local function endshift()
+    if not shifting then return end
+
+    vim:SendKeyEvent(false, 304, false, nil)
+    shifting = false
+end
+
+local queue = ""
+local rem = true
+
+-- Boucle pour traiter chaque caractère
+for i = 1, #str do
+    if shared.stop == true then return end
+
+    local c = str:sub(i, i)
+    
+    if c == "[" then
+        rem = false
+        continue
+    elseif c == "]" then
+        rem = true
+        if string.find(queue, " ") then
+            for ii = 1, #queue do
+                local cc = queue:sub(ii, ii)
+                pcall(function()
+                    doshift(cc)
+                    vim:SendKeyEvent(true, string.byte(cc:lower()), false, nil)
+                    wait(delay / 2)
+                    vim:SendKeyEvent(false, string.byte(cc:lower()), false, nil)
+                    endshift()
+                end)
+            end
+        else
+            for ii = 1, #queue do
+                local cc = queue:sub(ii, ii)
+                pcall(function()
+                    doshift(cc)
+                    vim:SendKeyEvent(true, string.byte(cc:lower()), false, nil)
+                    endshift()
+                end)
+                wait()
+            end
+            wait()
+            for ii = 1, #queue do
+                local cc = queue:sub(ii, ii)
+                pcall(function()
+                    doshift(cc)
+                    vim:SendKeyEvent(false, string.byte(cc:lower()), false, nil)
+                    endshift()
+                end)
+                wait()
+            end
+        end
+        queue = ""
+        continue
+    elseif c == " " or string.byte(c) == 10 then
+        if shared.nospacedelay then continue end
+        wait(delay)
+        continue
+    elseif c == "|" or c == "-" then
+        wait(delay * 2)
+        continue
+    end
+    
+    if not rem then
+        queue = queue .. c
+        continue
+    end
+
+    pcall(function()
+        doshift(c)
+        vim:SendKeyEvent(true, string.byte(c:lower()), false, nil)
+        wait()
+        vim:SendKeyEvent(false, string.byte(c:lower()), false, nil)
+        endshift()
+    end)
+   
+    wait(delay)
+end
+
+-- Retourner l'objet Input
+return Input
