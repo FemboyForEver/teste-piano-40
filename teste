@@ -10,8 +10,8 @@ local FinishTime = shared.ftime or 10
 local vim = game:GetService("VirtualInputManager")
 
 local nstr = string.gsub(str,"[[\]\n]","")
-local delay = shared.tempo and (12 / shared.tempo) or shared.delay or FinishTime / (string.len(nstr) / 0.10)
-delay = math.max(delay, 0.10)
+
+local delay = shared.tempo and (6 / shared.tempo) or shared.delay or FinishTime / (string.len(nstr) / 1.05)
 
 local shifting = false
 
@@ -58,7 +58,7 @@ for i=1, #str do
                     vim:SendKeyEvent(true, string.byte(cc:lower()), false, nil)
                 end
             end)
-            wait(delay)
+            wait(0)
             pcall(function()
                 for _, cc in ipairs(pressedKeys) do
                     vim:SendKeyEvent(false, string.byte(cc:lower()), false, nil)
