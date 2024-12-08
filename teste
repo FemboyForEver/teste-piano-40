@@ -6,13 +6,15 @@ shared.nospacedelay = shared.nospacedelay or false
 
 local str = shared.scr or "qw[er]ty"
 local FinishTime = shared.ftime or 10
+
 local vim = game:GetService("VirtualInputManager")
 
-local nstr = string.gsub(str, "[[\\]\n]", "")
+local nstr = string.gsub(str,"[[\]\n]","")
 
 local delay = shared.tempo and (FinishTime / (string.len(nstr) / shared.tempo)) or shared.delay or FinishTime / (string.len(nstr) / 1.05)
 
 local shifting = false
+
 local function doshift(key)
     if key:upper() ~= key then return end
     if tonumber(key) then return end
@@ -31,11 +33,7 @@ local rem = true
 local insideBrackets = false
 local pressedKeys = {}
 
-local function calculate_auto_delay()
-    return delay
-end
-
-for i = 1, #str do
+for i=1, #str do
     if shared.stop == true then return end
 
     local c = str:sub(i, i)
@@ -58,7 +56,7 @@ for i = 1, #str do
                 doshift(cc)
                 vim:SendKeyEvent(true, string.byte(cc:lower()), false, nil)
             end
-            wait(calculate_auto_delay())
+            wait(delay)
             for _, cc in ipairs(pressedKeys) do
                 vim:SendKeyEvent(false, string.byte(cc:lower()), false, nil)
                 endshift()
@@ -70,10 +68,10 @@ for i = 1, #str do
         continue
     elseif c == " " or string.byte(c) == 10 then
         if shared.nospacedelay then continue end
-        wait(calculate_auto_delay())
+        wait(delay)
         continue
     elseif c == "|" or c == "-" then
-        wait(calculate_auto_delay() * 2)
+        wait(delay * 2)
         continue
     end
 
@@ -84,9 +82,9 @@ for i = 1, #str do
 
     doshift(c)
     vim:SendKeyEvent(true, string.byte(c:lower()), false, nil)
-    wait(calculate_auto_delay())
+    wait(delay)
     vim:SendKeyEvent(false, string.byte(c:lower()), false, nil)
     endshift()
 
-    wait(calculate_auto_delay())
+    wait(delay)
 end
