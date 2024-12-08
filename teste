@@ -6,17 +6,13 @@ shared.nospacedelay = shared.nospacedelay or false
 
 local str = shared.scr or "qw[er]ty"
 local FinishTime = shared.ftime or 10
-
 local vim = game:GetService("VirtualInputManager")
 
-local nstr = string.gsub(str,"[[\]\n]","")
+local nstr = string.gsub(str, "[[\\]\n]", "")
 
 local delay = shared.tempo and (FinishTime / (string.len(nstr) / shared.tempo)) or shared.delay or FinishTime / (string.len(nstr) / 1.05)
 
-print("Finishing in", math.floor((delay * #nstr) / 60), "minute/s", tostring(tonumber(tostring((delay * #nstr) / 60):sub(3,8)) * 60):sub(1,2), "second/s")
-
 local shifting = false
-
 local function doshift(key)
     if key:upper() ~= key then return end
     if tonumber(key) then return end
@@ -35,12 +31,11 @@ local rem = true
 local insideBrackets = false
 local pressedKeys = {}
 
-local function musicalDelay(baseDelay)
-    local variation = math.random() * 0.02
-    return baseDelay + variation
+local function calculate_auto_delay()
+    return delay
 end
 
-for i=1, #str do
+for i = 1, #str do
     if shared.stop == true then return end
 
     local c = str:sub(i, i)
@@ -59,19 +54,15 @@ for i=1, #str do
                 local cc = queue:sub(ii, ii)
                 table.insert(pressedKeys, cc)
             end
-            pcall(function()
-                for _, cc in ipairs(pressedKeys) do
-                    doshift(cc)
-                    vim:SendKeyEvent(true, string.byte(cc:lower()), false, nil)
-                end
-            end)
-            wait(musicalDelay(delay))
-            pcall(function()
-                for _, cc in ipairs(pressedKeys) do
-                    vim:SendKeyEvent(false, string.byte(cc:lower()), false, nil)
-                    endshift()
-                end
-            end)
+            for _, cc in ipairs(pressedKeys) do
+                doshift(cc)
+                vim:SendKeyEvent(true, string.byte(cc:lower()), false, nil)
+            end
+            wait(calculate_auto_delay())
+            for _, cc in ipairs(pressedKeys) do
+                vim:SendKeyEvent(false, string.byte(cc:lower()), false, nil)
+                endshift()
+            end
         end
 
         queue = ""
@@ -79,10 +70,10 @@ for i=1, #str do
         continue
     elseif c == " " or string.byte(c) == 10 then
         if shared.nospacedelay then continue end
-        wait(musicalDelay(delay))
+        wait(calculate_auto_delay())
         continue
     elseif c == "|" or c == "-" then
-        wait(musicalDelay(delay * 1.5))
+        wait(calculate_auto_delay() * 2)
         continue
     end
 
@@ -91,13 +82,11 @@ for i=1, #str do
         continue
     end
 
-    pcall(function()
-        doshift(c)
-        vim:SendKeyEvent(true, string.byte(c:lower()), false, nil)
-        wait(musicalDelay(delay))
-        vim:SendKeyEvent(false, string.byte(c:lower()), false, nil)
-        endshift()
-    end)
+    doshift(c)
+    vim:SendKeyEvent(true, string.byte(c:lower()), false, nil)
+    wait(calculate_auto_delay())
+    vim:SendKeyEvent(false, string.byte(c:lower()), false, nil)
+    endshift()
 
-    wait(musicalDelay(delay))
+    wait(calculate_auto_delay())
 end
