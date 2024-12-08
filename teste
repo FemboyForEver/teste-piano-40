@@ -35,6 +35,7 @@ end
 local queue = ""
 local rem = true
 local bracketQueue = {}
+local lastTime = tick()
 
 for i=1, #str do
     if shared.stop == true then return end
@@ -52,7 +53,7 @@ for i=1, #str do
                     doshift(cc)
                     vim:SendKeyEvent(true, string.byte(cc:lower()), false, nil)
                 end
-                wait()
+                wait(delay)
                 for _, cc in ipairs(bracketQueue) do
                     vim:SendKeyEvent(false, string.byte(cc:lower()), false, nil)
                     endshift()
@@ -83,5 +84,10 @@ for i=1, #str do
         endshift()
     end)
    
-    wait(delay)
+    local elapsed = tick() - lastTime
+    local remainingDelay = delay - elapsed
+    if remainingDelay > 0 then
+        wait(remainingDelay)
+    end
+    lastTime = tick()
 end
