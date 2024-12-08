@@ -34,44 +34,45 @@ end
 
 local queue = ""
 local rem = true
+local insideBrackets = false
+local pressedKeys = {}
 
 for i=1, #str do
     if shared.stop == true then return end
 
     local c = str:sub(i,i)
-    
+
     if c == "[" then
         rem = false
+        insideBrackets = true
+        queue = ""
         continue
     elseif c == "]" then
         rem = true
-        -- Si on est dans des crochets, traiter tous les caractères de `queue` simultanément
-        if string.find(queue, " ") then
-            -- Si la queue contient des espaces, on envoie chaque caractère en maintenant la touche SHIFT
-            for ii=1, #queue do
+        insideBrackets = false
+        
+        if queue ~= "" then
+            for ii = 1, #queue do
                 local cc = queue:sub(ii, ii)
-                pcall(function()
+                table.insert(pressedKeys, cc)
+            end
+            pcall(function()
+                for _, cc in ipairs(pressedKeys) do
                     doshift(cc)
                     vim:SendKeyEvent(true, string.byte(cc:lower()), false, nil)
-                    wait(delay/2)
+                end
+            end)
+            wait(delay)
+            pcall(function()
+                for _, cc in ipairs(pressedKeys) do
                     vim:SendKeyEvent(false, string.byte(cc:lower()), false, nil)
                     endshift()
-                end)
-            end
-        else
-            -- Sinon, on envoie tous les caractères sans maintenir SHIFT
-            for ii=1, #queue do
-                local cc = queue:sub(ii, ii)
-                pcall(function()
-                    doshift(cc)
-                    vim:SendKeyEvent(true, string.byte(cc:lower()), false, nil)
-                    wait(delay)
-                    vim:SendKeyEvent(false, string.byte(cc:lower()), false, nil)
-                    endshift()
-                end)
-            end
+                end
+            end)
         end
+        
         queue = ""
+        pressedKeys = {}
         continue
     elseif c == " " or string.byte(c) == 10 then
         if shared.nospacedelay then continue end
@@ -81,14 +82,12 @@ for i=1, #str do
         wait(delay*2)
         continue
     end
-    
-    -- Ajouter les caractères à la queue si on est entre crochets
+
     if not rem then
         queue = queue .. c
         continue
     end
 
-    -- Traiter normalement les caractères en dehors des crochets
     pcall(function()
         doshift(c)
         vim:SendKeyEvent(true, string.byte(c:lower()), false, nil)
