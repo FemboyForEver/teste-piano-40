@@ -58,7 +58,7 @@ for i=1, #str do
                     vim:SendKeyEvent(true, string.byte(cc:lower()), false, nil)
                 end
             end)
-            wait(0)
+            wait(0)  -- Jouer les notes simultanément
             pcall(function()
                 for _, cc in ipairs(pressedKeys) do
                     vim:SendKeyEvent(false, string.byte(cc:lower()), false, nil)
