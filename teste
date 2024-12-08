@@ -11,9 +11,9 @@ local vim = game:GetService("VirtualInputManager")
 
 local nstr = string.gsub(str,"[[\]\n]","")
 
-local delay = shared.tempo and (6 / shared.tempo) or shared.delay or FinishTime / (string.len(nstr) / 1.05)
+local delay = (shared.tempo and (6 / shared.tempo)) or (shared.delay or FinishTime / (string.len(nstr) / 1.05))
 
-print("Finishing in",math.floor((delay*#nstr)/60),"minute/s",tostring(tonumber(tostring((delay*#nstr)/60):sub(3,8))*60):sub(1,2),"second/s")
+print("Finishing in", math.floor((delay * #nstr) / 60), "minute/s", tostring(tonumber(tostring((delay * #nstr) / 60):sub(3, 8)) * 60):sub(1, 2), "second/s")
 
 local shifting = false
 
@@ -36,12 +36,11 @@ local queue = ""
 local rem = true
 local bracketQueue = {}
 local lastTime = tick()
-local bracketDelay = delay
 
-for i=1, #str do
+for i = 1, #str do
     if shared.stop == true then return end
 
-    local c = str:sub(i,i)
+    local c = str:sub(i, i)
     
     if c == "[" then
         rem = false
@@ -54,7 +53,7 @@ for i=1, #str do
                     doshift(cc)
                     vim:SendKeyEvent(true, string.byte(cc:lower()), false, nil)
                 end
-                wait(bracketDelay)
+                wait(delay)
                 for _, cc in ipairs(bracketQueue) do
                     vim:SendKeyEvent(false, string.byte(cc:lower()), false, nil)
                     endshift()
@@ -68,7 +67,7 @@ for i=1, #str do
         wait(delay)
         continue
     elseif c == "|" or c == "-" then
-        wait(delay*2)
+        wait(delay * 2)
         continue
     end
     
