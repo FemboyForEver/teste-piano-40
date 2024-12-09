@@ -10,8 +10,8 @@ local vim = game:GetService("VirtualInputManager")
 
 local tempo = shared.tempo or 120
 local delay = 60 / tempo
-
-local delayBeforeAfterMultiple = shared.beforeafterdelay or delay / 2
+local noteDelay = delay / 1.5
+local delayAfterMultiple = delay * 2
 
 local shifting = false
 
@@ -37,15 +37,14 @@ local function sendUniqueKey(c)
     pcall(function()
         doshift(c)
         vim:SendKeyEvent(true, string.byte(c:lower()), false, nil)
-        wait(delay)
+        wait(noteDelay)
         vim:SendKeyEvent(false, string.byte(c:lower()), false, nil)
         endshift()
     end)
-    wait(delay)
+    wait(noteDelay)
 end
 
 local function sendMultipleKeys(keys)
-    wait(delayBeforeAfterMultiple)
     for ii = 1, #keys do
         local cc = keys:sub(ii, ii)
         pcall(function()
@@ -61,7 +60,7 @@ local function sendMultipleKeys(keys)
             endshift()
         end)
     end
-    wait(delayBeforeAfterMultiple)
+    wait(delayAfterMultiple)
 end
 
 for i = 1, #str do
@@ -81,7 +80,7 @@ for i = 1, #str do
         continue
     elseif c == " " or string.byte(c) == 10 then
         if shared.nospacedelay then continue end
-        wait(delay)
+        wait(noteDelay)
         continue
     elseif c == "|" or c == "-" then
         wait(delay * 2)
