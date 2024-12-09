@@ -45,7 +45,7 @@ for i=1, #str do
         continue
     elseif c == "]" then
         rem = true
-        pcall(function()
+        spawn(function()
             for ii=1, #queue do
                 local cc = queue:sub(ii,ii)
                 doshift(cc)
