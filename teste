@@ -9,23 +9,21 @@ local str = shared.scr or "qw[er]ty"
 local vim = game:GetService("VirtualInputManager")
 
 local tempo = shared.tempo or 120
-local delay = 60 / tempo
-local noteDelay = delay / 0.50
-local delayAfterMultiple = delay * 1.00
+local delay = (60 / tempo) * 0.9
+local noteDelay = delay / 1.5
+local delayAfterMultiple = delay * 1.8
 
 local shifting = false
 
 local function doshift(key)
     if key:upper() ~= key then return end
     if tonumber(key) then return end
-    
     vim:SendKeyEvent(true, 304, false, nil)
     shifting = true
 end
 
 local function endshift()
     if not shifting then return end
-
     vim:SendKeyEvent(false, 304, false, nil)
     shifting = false
 end
@@ -83,7 +81,7 @@ for i = 1, #str do
         wait(noteDelay)
         continue
     elseif c == "|" or c == "-" then
-        wait(delay * 2)
+        wait(delay * 1.8)
         continue
     end
     
