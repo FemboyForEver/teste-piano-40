@@ -10,8 +10,8 @@ local vim = game:GetService("VirtualInputManager")
 
 local tempo = shared.tempo or 120
 local delay = 60 / tempo
-local noteDelay = delay / 1.5
-local delayAfterMultiple = delay * 2
+local noteDelay = delay / 0.50
+local delayAfterMultiple = delay * 1.00
 
 local shifting = false
 
