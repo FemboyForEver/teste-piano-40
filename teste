@@ -43,6 +43,7 @@ for i = 1, #str do
 
     if c == "[" then
         rem = false
+        queue = ""
         continue
     elseif c == "]" then
         rem = true
@@ -51,10 +52,10 @@ for i = 1, #str do
         continue
     elseif c == " " or string.byte(c) == 10 then
         if shared.nospacedelay then continue end
-        wait(delay)
+        wait(delay / 2)
         continue
     elseif c == "|" or c == "-" then
-        wait(delay * 2)
+        wait(delay)
         continue
     end
 
@@ -66,21 +67,22 @@ for i = 1, #str do
     pcall(function()
         doshift(c)
         vim:SendKeyEvent(true, string.byte(c:lower()), false, nil)
-        wait()
+        wait(delay / 2)
         vim:SendKeyEvent(false, string.byte(c:lower()), false, nil)
         endshift()
     end)
 
-    wait(delay)
+    wait(delay / 2)
 end
 
 for _, noteSet in ipairs(simultaneousNotes) do
+    local keyThreads = {}
     for ii = 1, #noteSet do
         local cc = noteSet:sub(ii, ii)
-        pcall(function()
+        table.insert(keyThreads, pcall(function()
             doshift(cc)
             vim:SendKeyEvent(true, string.byte(cc:lower()), false, nil)
-        end)
+        end))
     end
     wait(delay / 2)
     for ii = 1, #noteSet do
@@ -90,4 +92,5 @@ for _, noteSet in ipairs(simultaneousNotes) do
             endshift()
         end)
     end
+    wait(delay / 2)
 end
