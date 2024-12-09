@@ -45,15 +45,19 @@ for i=1, #str do
         continue
     elseif c == "]" then
         rem = true
-        spawn(function()
-            for ii=1, #queue do
-                local cc = queue:sub(ii,ii)
+        local notes = {}
+        for ii=1, #queue do
+            local cc = queue:sub(ii,ii)
+            table.insert(notes, cc)
+        end
+        
+        pcall(function()
+            for _, cc in ipairs(notes) do
                 doshift(cc)
                 vim:SendKeyEvent(true, string.byte(cc:lower()), false, nil)
             end
             wait(delay / 2)
-            for ii=1, #queue do
-                local cc = queue:sub(ii,ii)
+            for _, cc in ipairs(notes) do
                 vim:SendKeyEvent(false, string.byte(cc:lower()), false, nil)
                 endshift()
             end
